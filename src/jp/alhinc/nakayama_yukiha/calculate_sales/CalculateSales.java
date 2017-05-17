@@ -45,7 +45,6 @@ public class CalculateSales {
 			String s;
 			while((s = br.readLine()) != null) {
 				String[] mise = s.split(",");
-				System.out.println(mise[1]);
 				
 				
 				
@@ -151,6 +150,13 @@ public class CalculateSales {
 		try{
 			File dir = new File(args[0]);
 			File[] earningfiles = dir.listFiles(filter);
+			
+			for (int i = 0 ; i < earningfiles.length ; i++){
+				if (earningfiles[i].isDirectory()){
+					System.out.println("売り上げファイルが連番になっていません");
+					return;
+				}
+			}
 
 			//！フィルターをかけたリストをファイルの数だけ読み込み！
 			for (int ii = 0; ii < earningfiles.length; ii++){
@@ -165,6 +171,7 @@ public class CalculateSales {
 					
 						
 				}
+				
 				int size = earningf.size();
 				if (!String.valueOf(size).matches("3")){
 					System.out.println(earningfiles[ii].getName() + "のファイルフォーマットが不正です");
@@ -189,7 +196,7 @@ public class CalculateSales {
 					branchsales.put(earningf.get(0), S3);
 				}else{
 					System.out.println(earningfiles[ii].getName() + "の支店コードが不正です");
-				      return;
+					return;
 				}
 				//MapにKeyが格納されているか確認
 				if (commoditysales.containsKey(earningf.get(1))){
@@ -204,11 +211,10 @@ public class CalculateSales {
 					commoditysales.put(earningf.get(1), l3);
 
 				}else{
-				      System.out.println(earningfiles[ii].getName() + "の商品コードが不正です");
-				      return;
+					System.out.println(earningfiles[ii].getName() + "の商品コードが不正です");
+					return;
 				}
 				
-
 			}
 		} catch(IOException e) {
 			System.out.println(e);
@@ -219,11 +225,11 @@ public class CalculateSales {
 
 		List<Map.Entry<String,Long>> entries =
 				new ArrayList<Map.Entry<String, Long>>(branchsales.entrySet());
-			Collections.sort(entries, new Comparator<Map.Entry<String,Long>>(){
-				@Override
-				public int compare(
-						Entry<String,Long> entry1, Entry<String,Long> entry2) {
-					return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
+		Collections.sort(entries, new Comparator<Map.Entry<String,Long>>(){
+			@Override
+			public int compare(
+					Entry<String,Long> entry1, Entry<String,Long> entry2) {
+				return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
 				}
 			});
 		try{
@@ -251,7 +257,7 @@ public class CalculateSales {
 		//Mapをソートする***********＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
 		List<Map.Entry<String,Long>> entriess =
 				new ArrayList<Map.Entry<String, Long>>(commoditysales.entrySet());
-			Collections.sort(entriess, new Comparator<Map.Entry<String,Long>>(){
+		Collections.sort(entriess, new Comparator<Map.Entry<String,Long>>(){
 				@Override
 				public int compare(
 						Entry<String,Long> entry1, Entry<String,Long> entry2) {
@@ -277,7 +283,6 @@ public class CalculateSales {
 			System.out.println("予期せぬエラーが発生しました");	
 		}catch (IOException e){
 			System.out.println(e);
-		
 		}
 		
 
