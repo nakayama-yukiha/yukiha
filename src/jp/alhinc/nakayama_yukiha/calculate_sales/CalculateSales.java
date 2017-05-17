@@ -32,6 +32,8 @@ public class CalculateSales {
 
 		//ここから支店定義ファイルの読み込み格納
 		//ファイルの読み込み、一行ずつデータを読み、カンマで区切り配列→Mapへ格納
+
+		BufferedReader br = null;
 		try{
 
 			File branch = new File(args[0],"branch.lst");
@@ -41,35 +43,40 @@ public class CalculateSales {
 			}
 
 			FileReader fr = new FileReader(branch);
-			BufferedReader br = new BufferedReader(fr);
+			br = new BufferedReader(fr);
 			String s;
 			while((s = br.readLine()) != null) {
 				String[] mise = s.split(",");
-				
-				
-				
+
+				//支店名は○○支店の表記、それ以外は処理終了
+
 				if (!mise[0].matches("^[0-9]{3}$")||mise.length !=2 ){
 					System.out.println("支店定義ファイルのフォーマットが不正です");
 					return;
 				}
-				
+
 				branchcode.put(mise[0], mise[1]);
 				branchsales.put(mise[0], 0L);
-				//エラー表示未着手
-
 			}
 
-			
-			br.close();
-
 		}catch(IOException e) {
-			System.out.println(e);
+			System.out.println("予期せぬエラーが発生しました");
 		}catch(ArrayIndexOutOfBoundsException e){
 			System.out.println("予期せぬエラーが発生しました");
 			return;
+		}finally{
+			try{
+				if (br != null){
+				br.close();
+				}
+			}catch(IOException e) {
+				System.out.println("予期せぬエラーが発生しました");
+			}
 		}
 
 //ここから商品定義ファイルの読み込み
+
+		BufferedReader brr = null;
 		try{
 
 			File commodity = new File(args[0],"commodity.lst");
@@ -79,9 +86,9 @@ public class CalculateSales {
 			}
 
 			FileReader fr = new FileReader(commodity);
-			BufferedReader br = new BufferedReader(fr);
+			brr = new BufferedReader(fr);
 			String ss;
-			while((ss = br.readLine()) != null) {
+			while((ss = brr.readLine()) != null) {
 				String[] mono = ss.split(",");
 				if (!mono[0].matches("^[A-Za-z0-9]{8}$")||mono.length != 2){
 					System.out.println("商品定義ファイルのフォーマットが不正です");
@@ -89,54 +96,52 @@ public class CalculateSales {
 				}
 				commoditycode.put(mono[0], mono[1]);
 				commoditysales.put(mono[0], 0L);
-
-
-			}br.close();
-			
-
+			}
 		}catch(IOException e) {
-			System.out.println(e);	
+			System.out.println("予期せぬエラーが発生しました");
+		}finally{
+			try{
+				if (brr != null){
+				brr.close();
+				}
+			}catch(IOException e) {
+				System.out.println("予期せぬエラーが発生しました");
+			}
 		}
 
 		//ここから売り上げファイルの中身を抽出
 		ArrayList<Integer> filename = new ArrayList<Integer>();
-
+		//ファイル名を格納するリストを作成
 
 		File rcdfile = new File(args[0]);
 		String[] earning = rcdfile.list();
 		//ディレクトリ内のファイル名一覧を取得し、string型の配列に返す
 		//listfilesを使用するとファイルとして一覧を取得することができる。getName()を使用するとファイル名を抽出
 		//ただの表示
-		
 
 		for (int ii = 0; ii < earning.length; ii++){
 
 			if (earning[ii].matches("\\d{8}.rcd")){
-				//配列uriageに格納された文字列が8桁.rcdであれば
+				//配列earningに格納された文字列が数字8桁.rcdであれば
 				String[] struri = earning[ii].split("\\.");	//ピリオドで分割し
 
 				//分割した配列をint型に変換
 				int n = Integer.parseInt(struri[0]);
 				filename.add(n);
 				Collections.sort(filename);
-				
 			}
 		}
-		
-		//変換したものをチェック
 
-
+		//連番チェック
 		for (int i = 1; i < filename.size(); i++){
 			if (!(filename.get(i) == filename.get(i-1)+1)){
-				System.out.println("売り上げファイル名が連番になっていません");
+				System.out.println("売上ファイル名が連番になっていません");
 				return;}
-
 		}
 
 		//フィルタを作成
 
 		FilenameFilter filter = new FilenameFilter() {
-
 			public boolean accept(File dir, String name){
 				if(name.matches("\\d{8}.rcd")){
 					return true;
@@ -147,13 +152,14 @@ public class CalculateSales {
 		};
 		//！ファイルの読み込み開始！
 
+		BufferedReader bbrr = null;
 		try{
 			File dir = new File(args[0]);
 			File[] earningfiles = dir.listFiles(filter);
-			
+
 			for (int i = 0 ; i < earningfiles.length ; i++){
 				if (earningfiles[i].isDirectory()){
-					System.out.println("売り上げファイルが連番になっていません");
+					System.out.println("売上ファイル名が連番になっていません");
 					return;
 				}
 			}
@@ -162,25 +168,25 @@ public class CalculateSales {
 			for (int ii = 0; ii < earningfiles.length; ii++){
 				ArrayList<String> earningf = new ArrayList<String>();
 				FileReader frr = new FileReader(earningfiles[ii]);
-				BufferedReader brr = new BufferedReader(frr);
+				bbrr = new BufferedReader(frr);
 
 				//！読み込んだファイルを一行ずつ読み込みリストに格納！
 				String rl;
-				for (int iii = 0; (rl = brr.readLine()) != null; iii++){
+				for (int iii = 0; (rl = bbrr.readLine()) != null; iii++){
 					earningf.add(rl);
-					
-						
+
 				}
-				
+
 				int size = earningf.size();
 				if (!String.valueOf(size).matches("3")){
-					System.out.println(earningfiles[ii].getName() + "のファイルフォーマットが不正です");
+					System.out.println(earningfiles[ii].getName() + "のフォーマットが不正です");
 					return;
 				}
-				
-				
-				//なぜか逆の意味になる？？？？ほか、0と1も作成予定
-				
+				if (!earningf.get(2).matches("^[0-9]+$")){
+					System.out.println(earningfiles[ii].getName() + "のフォーマットが不正です");
+					return;
+				}
+
 
 				//！リストからMapへ集計
 				//MapにKeyが格納されているか確認
@@ -214,11 +220,23 @@ public class CalculateSales {
 					System.out.println(earningfiles[ii].getName() + "の商品コードが不正です");
 					return;
 				}
-				
+
 			}
 		} catch(IOException e) {
-			System.out.println(e);
+			System.out.println("予期せぬエラーが発生しました");
+
+		}finally{
+			try{
+				if (bbrr != null){
+				bbrr.close();
+				}
+			}catch(IOException e) {
+				System.out.println("予期せぬエラーが発生しました");
+			}
 		}
+
+
+
 		//＊＊＊集計に成功した場合にファイルを作成するif文を後で作成＊＊＊＊＊＊＊
 
 		//＊＊Mapをソートするプログラム*＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
@@ -232,14 +250,15 @@ public class CalculateSales {
 				return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
 				}
 			});
+		BufferedWriter bbww = null;
 		try{
 			File brancho = new File(args[0],"branch.out");
 			FileWriter ffww = new FileWriter(brancho);
-			BufferedWriter bbww = new BufferedWriter(ffww);
+			bbww = new BufferedWriter(ffww);
 
 			for (Entry<String,Long> s : entries) {
-			
-				
+
+
 				String val = String.valueOf(s.getValue());
 
 				//ファイルへ出力
@@ -248,9 +267,17 @@ public class CalculateSales {
 
 			}bbww.close();
 		}catch (FileNotFoundException e){
-			System.out.println("予期せぬエラーが発生しました");	
+			System.out.println("予期せぬエラーが発生しました");
 		}catch (IOException e) {
-			System.out.println(e);
+			System.out.println("予期せぬエラーが発生しました");
+		}finally{
+			try{
+				if (bbww != null){
+				bbww.close();
+				}
+			}catch(IOException e) {
+				System.out.println("予期せぬエラーが発生しました");
+			}
 		}
 
 		//ここから商品売り上げまとめ
@@ -265,13 +292,14 @@ public class CalculateSales {
 				}
 			});
 		//ファイルに書き込みする*＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+		BufferedWriter bbwww = null;
 		try{
 			File commodityo = new File(args[0],"commodity.out");
 			FileWriter ffwww = new FileWriter(commodityo);
-			BufferedWriter bbwww = new BufferedWriter(ffwww);
+			bbwww = new BufferedWriter(ffwww);
 
 			for (Entry<String,Long> ss : entriess) {
-			
+
 				String val2 = String.valueOf(ss.getValue());
 
 				//ファイルへ出力
@@ -280,11 +308,19 @@ public class CalculateSales {
 
 			}bbwww.close();
 		}catch (FileNotFoundException e){
-			System.out.println("予期せぬエラーが発生しました");	
+			System.out.println("予期せぬエラーが発生しました");
 		}catch (IOException e){
-			System.out.println(e);
+			System.out.println("予期せぬエラーが発生しました");
+		}finally{
+			try{
+				if (bbwww != null){
+				bbwww.close();
+				}
+			}catch(IOException e) {
+				System.out.println("予期せぬエラーが発生しました");
+			}
 		}
-		
+
 
 	}
 
