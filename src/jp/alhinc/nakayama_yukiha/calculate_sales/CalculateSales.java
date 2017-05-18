@@ -183,7 +183,7 @@ public class CalculateSales {
 					return;
 				}
 				if (!earningf.get(2).matches("^[0-9]+$")){
-					System.out.println(earningfiles[ii].getName() + "のフォーマットが不正です");
+					System.out.println("予期せぬエラーが発生しました");//修正
 					return;
 				}
 
@@ -224,6 +224,7 @@ public class CalculateSales {
 			}
 		} catch(IOException e) {
 			System.out.println("予期せぬエラーが発生しました");
+			return;
 
 		}finally{
 			try{
@@ -320,7 +321,6 @@ public class CalculateSales {
 				System.out.println("予期せぬエラーが発生しました");
 			}
 		}
-
 
 	}
 
